@@ -3,6 +3,8 @@ package com.baegmon.overwatchclips.Fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -47,29 +49,29 @@ public class CardContentFragment extends Fragment {
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public ImageView picture;
+        public ImageView favorite;
         public TextView name;
         public TextView description;
+
         public ViewHolder(LayoutInflater inflater, ViewGroup parent) {
             super(inflater.inflate(R.layout.item_card, parent, false));
             picture = (ImageView) itemView.findViewById(R.id.card_image);
             description = (TextView) itemView.findViewById(R.id.card_text);
+            favorite = (ImageView) itemView.findViewById(R.id.favorite_button);
+
             picture.setOnClickListener(this);
+            favorite.setOnClickListener(this);
+
         }
+
 
         @Override
         public void onClick(View v) {
-            picture.setOnClickListener(this);
-
-            if (_onItemClickListener != null) {
-                _onItemClickListener.onItemClick(itemView, getAdapterPosition());
-            }
-
+            _onItemClickListener.onItemClick(v, getAdapterPosition());
         }
 
     }
-    /**
-     * Adapter to display recycler view.
-     */
+
     public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> {
         // Set numbers of List in RecyclerView.
         private Context _context;
@@ -88,6 +90,11 @@ public class CardContentFragment extends Fragment {
             String thumbnail = "https://thumbs.gfycat.com/" + list.get(position).getCode() + "-poster.jpg";
             Picasso.with(_context).load(thumbnail).into(holder.picture);
             holder.description.setText(list.get(position).getTitle());
+            if(!list.get(position).isFavorited()){
+                DrawableCompat.setTint(holder.favorite.getDrawable(), ContextCompat.getColor(_context, R.color.unfavorite));
+            } else {
+                DrawableCompat.setTint(holder.favorite.getDrawable(), ContextCompat.getColor(_context, R.color.favorite));
+            }
 
         }
 

@@ -29,7 +29,8 @@ public class SavedContentFragment extends Fragment {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        list = new ArrayList<>();
+        list = (ArrayList<Clip>) getArguments().getSerializable("FAVORITE");
+
         return recyclerView;
     }
 

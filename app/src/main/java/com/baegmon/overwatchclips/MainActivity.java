@@ -1,8 +1,7 @@
 package com.baegmon.overwatchclips;
 
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
@@ -10,6 +9,8 @@ import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -25,10 +26,7 @@ import com.github.jreddit.retrieval.Submissions;
 import com.github.jreddit.retrieval.params.SubmissionSort;
 import com.github.jreddit.utils.restclient.PoliteHttpRestClient;
 import com.github.jreddit.utils.restclient.RestClient;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -42,7 +40,9 @@ import java.util.concurrent.Future;
 public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Clip> clips;
+    private ArrayList<Clip> favoriteClips;
     private String KEY = "CLIPS";
+    private Context _context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         clips = new ArrayList<>();
+        favoriteClips = new ArrayList<>();
         visitSubreddit();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -60,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabs = (TabLayout) findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
+
+        _context = this;
 
 
 
@@ -76,19 +79,45 @@ public class MainActivity extends AppCompatActivity {
         adapter.addFragment(fragment, "Clips");
 
         if(!clips.isEmpty()){
+
             CardContentFragment.OnItemClickListener onItemClickListener = new CardContentFragment.OnItemClickListener() {
+
                 @Override
                 public void onItemClick(View view, int position) {
-                    Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                    intent.putExtra("Clip", clips.get(position));
-                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(MainActivity.this);
-                    ActivityCompat.startActivity(MainActivity.this, intent, options.toBundle());
+
+                    if (view.findViewById(R.id.favorite_button) == view) {
+                        Clip clip = clips.get(position);
+                        ImageView favoriteButton = (ImageView) view.findViewById(R.id.favorite_button);
+
+                        if(clip.isFavorited()){
+                            DrawableCompat.setTint(favoriteButton.getDrawable(), ContextCompat.getColor(_context, R.color.favorite));
+                            favoriteClips.add(clip);
+                        } else {
+                            DrawableCompat.setTint(favoriteButton.getDrawable(), ContextCompat.getColor(_context, R.color.unfavorite));
+                            favoriteClips.remove(clip);
+                        }
+
+                        clip.favorite();
+
+                    } else if (view.findViewById(R.id.card_image) == view){
+                        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+                        intent.putExtra("Clip", clips.get(position));
+                        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(MainActivity.this);
+                        ActivityCompat.startActivity(MainActivity.this, intent, options.toBundle());
+                    }
+
                 }
             };
+
             fragment.setOnItemClickListener(onItemClickListener);
         }
 
-        //adapter.addFragment(new SavedContentFragment(), "Saved");
+        SavedContentFragment favoriteFragment = new SavedContentFragment();
+        Bundle favoriteBundle = new Bundle();
+        favoriteBundle.putSerializable("FAVORITE", favoriteClips);
+        favoriteFragment.setArguments(favoriteBundle);
+
+        adapter.addFragment(favoriteFragment, "Clips");
 
         viewPager.setAdapter(adapter);
     }
