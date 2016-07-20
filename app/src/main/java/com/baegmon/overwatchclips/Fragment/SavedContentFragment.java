@@ -8,64 +8,39 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import com.baegmon.overwatchclips.Clip;
 import com.baegmon.overwatchclips.R;
-import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 
-
-public class CardContentFragment extends Fragment {
+public class SavedContentFragment extends Fragment {
 
     private static ArrayList<Clip> list;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        RecyclerView recyclerView = (RecyclerView) inflater.inflate(R.layout.recycler_view, container, false);
+        RecyclerView recyclerView = (RecyclerView) inflater.inflate(
+                R.layout.recycler_view, container, false);
         ContentAdapter adapter = new ContentAdapter(recyclerView.getContext());
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        list = (ArrayList<Clip>) getArguments().getSerializable("CLIPS");
-
+        list = new ArrayList<>();
         return recyclerView;
     }
 
-    private static OnItemClickListener _onItemClickListener;
-
-    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
-        _onItemClickListener = onItemClickListener;
-    }
-
-    public interface OnItemClickListener {
-        void onItemClick(View view, int position);
-    }
-
-
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        public ImageView picture;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public VideoView video;
         public TextView name;
         public TextView description;
         public ViewHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.item_card, parent, false));
-            picture = (ImageView) itemView.findViewById(R.id.card_image);
-            description = (TextView) itemView.findViewById(R.id.card_text);
-            picture.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            picture.setOnClickListener(this);
-
-            if (_onItemClickListener != null) {
-                _onItemClickListener.onItemClick(itemView, getAdapterPosition());
-            }
+            super(inflater.inflate(R.layout.item_card_saved, parent, false));
 
         }
-
     }
     /**
      * Adapter to display recycler view.
@@ -85,9 +60,13 @@ public class CardContentFragment extends Fragment {
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
 
-            String thumbnail = "https://thumbs.gfycat.com/" + list.get(position).getCode() + "-poster.jpg";
-            Picasso.with(_context).load(thumbnail).into(holder.picture);
-            holder.description.setText(list.get(position).getTitle());
+            String clipTitle = list.get(position).getTitle();
+            String linkStart = "https://thumbs.gfycat.com/";
+            String linkEnd = "-poster.jpg";
+            String thumbnail = linkStart + list.get(position).getCode() + linkEnd;
+
+            //Picasso.with(_context).load(thumbnail).into(holder.picture);
+            holder.description.setText(clipTitle);
 
         }
 

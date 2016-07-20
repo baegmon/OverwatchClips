@@ -1,9 +1,13 @@
 package com.baegmon.overwatchclips;
 
-public class Clip {
+import java.io.Serializable;
+
+public class Clip implements Serializable{
 
     private String _title;
     private String _code;
+    private String _source;
+    private String _size;
 
     public Clip(String title, String code){
         _title = title;
@@ -17,5 +21,4 @@ public class Clip {
     public String getCode(){
         return _code;
     }
-
 }
