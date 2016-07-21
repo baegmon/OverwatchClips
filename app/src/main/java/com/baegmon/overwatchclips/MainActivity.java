@@ -19,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 
+
 import com.baegmon.overwatchclips.Fragment.CardContentFragment;
 import com.baegmon.overwatchclips.Fragment.SavedContentFragment;
 import com.github.jreddit.entity.Submission;
@@ -51,8 +52,10 @@ public class MainActivity extends AppCompatActivity {
 
         clips = new ArrayList<>();
         favoriteClips = new ArrayList<>();
+
         visitSubreddit();
 
+        //favoriteClips.add(clips.get(1));
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -64,23 +67,47 @@ public class MainActivity extends AppCompatActivity {
 
         _context = this;
 
+    }
 
+    public void updateClips(ArrayList<Clip> toUpdate){
+        clips = toUpdate;
+    }
 
+    public ArrayList<Clip> getClips() {
+        return clips;
+    }
+
+    public void updateFavorites(ArrayList<Clip> toUpdate){
+        favoriteClips = toUpdate;
+    }
+
+    private Adapter adapter;
+    private CardContentFragment fragment;
+    private SavedContentFragment favoriteFragment;
+
+    public void callUpdate(){
+        adapter.notifyDataSetChanged();
     }
 
     private void setupViewPager(ViewPager viewPager) {
-        Adapter adapter = new Adapter(getSupportFragmentManager());
+        adapter = new Adapter(getSupportFragmentManager());
 
-        CardContentFragment fragment = new CardContentFragment();
+        fragment = new CardContentFragment();
         Bundle bundle = new Bundle();
         bundle.putSerializable(KEY, clips);
         fragment.setArguments(bundle);
 
+        favoriteFragment = new SavedContentFragment();
+        Bundle favoriteBundle = new Bundle();
+        favoriteBundle.putSerializable("FAVORITE", favoriteClips);
+        favoriteFragment.setArguments(favoriteBundle);
+
         adapter.addFragment(fragment, "Clips");
+        adapter.addFragment(favoriteFragment, "Favorite");
 
         if(!clips.isEmpty()){
 
-            CardContentFragment.OnItemClickListener onItemClickListener = new CardContentFragment.OnItemClickListener() {
+            MyOnItemClickListener onItemClickListener = new MyOnItemClickListener() {
 
                 @Override
                 public void onItemClick(View view, int position) {
@@ -89,21 +116,62 @@ public class MainActivity extends AppCompatActivity {
                         Clip clip = clips.get(position);
                         ImageView favoriteButton = (ImageView) view.findViewById(R.id.favorite_button);
 
+                        // if the clip is already favorited
                         if(clip.isFavorited()){
-                            DrawableCompat.setTint(favoriteButton.getDrawable(), ContextCompat.getColor(_context, R.color.favorite));
-                            favoriteClips.add(clip);
-                        } else {
+                            clip.favorite();
+
                             DrawableCompat.setTint(favoriteButton.getDrawable(), ContextCompat.getColor(_context, R.color.unfavorite));
+
+                            // Update Clips Fragment
+                            updateClipsFragment();
+                            /*
+                            // Update Favorite fragment
+                            Bundle favoriteArgument = favoriteFragment.getArguments();
+                            favoriteArgument.clear();
                             favoriteClips.remove(clip);
+                            Bundle f = new Bundle();
+                            f.putSerializable("FAVORITE", favoriteClips);
+                            favoriteArgument.putAll(f);
+
+                            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                            ft.detach(favoriteFragment);
+                            ft.attach(favoriteFragment);
+                            ft.commit();
+                            */
+                            favoriteClips.remove(clip);
+
+
+                        } else {
+                            // otherwise the clip was not previously a favorite, change it to favorite
+                            clip.favorite();
+
+                            DrawableCompat.setTint(favoriteButton.getDrawable(), ContextCompat.getColor(_context, R.color.favorite));
+
+                            // Update Clips Fragment
+                            updateClipsFragment();
+                            /*
+                            // Update Favorite fragment
+                            Bundle favoriteArgument = favoriteFragment.getArguments();
+                            favoriteArgument.clear();
+                            favoriteClips.add(clip);
+                            Bundle f = new Bundle();
+                            f.putSerializable("FAVORITE", favoriteClips);
+                            favoriteArgument.putAll(f);
+
+                            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                            ft.detach(favoriteFragment);
+                            ft.attach(favoriteFragment);
+                            ft.commit();
+                            */
+                            favoriteClips.add(clip);
+
+
                         }
 
-                        clip.favorite();
+                        adapter.notifyDataSetChanged();
 
                     } else if (view.findViewById(R.id.card_image) == view){
-                        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                        intent.putExtra("Clip", clips.get(position));
-                        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(MainActivity.this);
-                        ActivityCompat.startActivity(MainActivity.this, intent, options.toBundle());
+                        openClip(position);
                     }
 
                 }
@@ -111,16 +179,26 @@ public class MainActivity extends AppCompatActivity {
 
             fragment.setOnItemClickListener(onItemClickListener);
         }
-
-        SavedContentFragment favoriteFragment = new SavedContentFragment();
-        Bundle favoriteBundle = new Bundle();
-        favoriteBundle.putSerializable("FAVORITE", favoriteClips);
-        favoriteFragment.setArguments(favoriteBundle);
-
-        adapter.addFragment(favoriteFragment, "Clips");
-
         viewPager.setAdapter(adapter);
+
     }
+
+    public void openClip(int position){
+        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+        intent.putExtra("Clip", clips.get(position));
+        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(MainActivity.this);
+        ActivityCompat.startActivity(MainActivity.this, intent, options.toBundle());
+    }
+
+    public void updateClipsFragment(){
+        // Update Clips Fragment
+        Bundle clipArgument = fragment.getArguments();
+        clipArgument.clear();
+        Bundle b = new Bundle();
+        b.putSerializable(KEY, clips);
+        clipArgument.putAll(b);
+    }
+
 
     static class Adapter extends FragmentPagerAdapter {
         private final List<Fragment> mFragmentList = new ArrayList<>();
@@ -138,6 +216,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public int getCount() {
             return mFragmentList.size();
+        }
+
+        @Override
+        public int getItemPosition(Object item) {
+            return POSITION_NONE;
         }
 
         public void addFragment(Fragment fragment, String title) {

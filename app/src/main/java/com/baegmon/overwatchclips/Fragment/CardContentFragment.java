@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.baegmon.overwatchclips.Clip;
+import com.baegmon.overwatchclips.MyOnItemClickListener;
 import com.baegmon.overwatchclips.R;
 import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 public class CardContentFragment extends Fragment {
 
     private static ArrayList<Clip> list;
+    private MyOnItemClickListener _onItemClickListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -36,18 +38,11 @@ public class CardContentFragment extends Fragment {
         return recyclerView;
     }
 
-    private static OnItemClickListener _onItemClickListener;
-
-    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+    public void setOnItemClickListener(MyOnItemClickListener onItemClickListener) {
         _onItemClickListener = onItemClickListener;
     }
 
-    public interface OnItemClickListener {
-        void onItemClick(View view, int position);
-    }
-
-
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public ImageView picture;
         public ImageView favorite;
         public TextView name;
@@ -72,7 +67,7 @@ public class CardContentFragment extends Fragment {
 
     }
 
-    public static class ContentAdapter extends RecyclerView.Adapter<ViewHolder> {
+    public class ContentAdapter extends RecyclerView.Adapter<ViewHolder> {
         // Set numbers of List in RecyclerView.
         private Context _context;
         public ContentAdapter(Context context) {
@@ -90,10 +85,11 @@ public class CardContentFragment extends Fragment {
             String thumbnail = "https://thumbs.gfycat.com/" + list.get(position).getCode() + "-poster.jpg";
             Picasso.with(_context).load(thumbnail).into(holder.picture);
             holder.description.setText(list.get(position).getTitle());
-            if(!list.get(position).isFavorited()){
-                DrawableCompat.setTint(holder.favorite.getDrawable(), ContextCompat.getColor(_context, R.color.unfavorite));
-            } else {
+
+            if(list.get(position).isFavorited()){
                 DrawableCompat.setTint(holder.favorite.getDrawable(), ContextCompat.getColor(_context, R.color.favorite));
+            } else {
+                DrawableCompat.setTint(holder.favorite.getDrawable(), ContextCompat.getColor(_context, R.color.unfavorite));
             }
 
         }
