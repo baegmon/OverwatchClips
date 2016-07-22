@@ -2,6 +2,7 @@ package com.baegmon.overwatchclips;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
@@ -53,6 +54,10 @@ public class MainActivity extends AppCompatActivity {
         clips = new ArrayList<>();
         favoriteClips = new ArrayList<>();
 
+        if(savedInstanceState != null){
+            favoriteClips = (ArrayList<Clip>) savedInstanceState.getSerializable("FAVORITE");
+        }
+
         visitSubreddit();
 
         //favoriteClips.add(clips.get(1));
@@ -66,6 +71,21 @@ public class MainActivity extends AppCompatActivity {
         tabs.setupWithViewPager(viewPager);
 
         _context = this;
+
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putSerializable("FAVORITE", favoriteClips);
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        favoriteClips = (ArrayList<Clip>) savedInstanceState.getSerializable("FAVORITE");
+        callUpdate();
 
     }
 
@@ -124,20 +144,6 @@ public class MainActivity extends AppCompatActivity {
 
                             // Update Clips Fragment
                             updateClipsFragment();
-                            /*
-                            // Update Favorite fragment
-                            Bundle favoriteArgument = favoriteFragment.getArguments();
-                            favoriteArgument.clear();
-                            favoriteClips.remove(clip);
-                            Bundle f = new Bundle();
-                            f.putSerializable("FAVORITE", favoriteClips);
-                            favoriteArgument.putAll(f);
-
-                            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                            ft.detach(favoriteFragment);
-                            ft.attach(favoriteFragment);
-                            ft.commit();
-                            */
                             favoriteClips.remove(clip);
 
 
@@ -149,20 +155,6 @@ public class MainActivity extends AppCompatActivity {
 
                             // Update Clips Fragment
                             updateClipsFragment();
-                            /*
-                            // Update Favorite fragment
-                            Bundle favoriteArgument = favoriteFragment.getArguments();
-                            favoriteArgument.clear();
-                            favoriteClips.add(clip);
-                            Bundle f = new Bundle();
-                            f.putSerializable("FAVORITE", favoriteClips);
-                            favoriteArgument.putAll(f);
-
-                            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                            ft.detach(favoriteFragment);
-                            ft.attach(favoriteFragment);
-                            ft.commit();
-                            */
                             favoriteClips.add(clip);
 
 
@@ -172,7 +164,14 @@ public class MainActivity extends AppCompatActivity {
 
                     } else if (view.findViewById(R.id.card_image) == view){
                         openClip(position);
+                    } else if (view.findViewById(R.id.source_button) == view) {
+                        Clip clip = clips.get(position);
+
+                        Uri uri = Uri.parse(clip.getSource());
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                        startActivity(intent);
                     }
+
 
                 }
             };
@@ -281,17 +280,16 @@ public class MainActivity extends AppCompatActivity {
 
             String link = "https://gfycat.com/";
             String link2 = "http://gfycat.com/";
-
+            String source = "https://www.reddit.com";
             for(Submission s : submission){
                 if(s.getDomain().contains("gfycat.com")){
-
                     char s_char = s.getURL().charAt(4);
                     if(Character.toString(s_char).equals("s")){
-                        Clip clip = new Clip(s.getTitle(), s.getUrl().replaceAll(link, ""));
+                        Clip clip = new Clip(s.getTitle(), s.getUrl().replaceAll(link, ""), source + s.getPermalink());
                         clips.add(clip);
 
                     } else {
-                        Clip clip = new Clip(s.getTitle(), s.getUrl().replaceAll(link2, ""));
+                        Clip clip = new Clip(s.getTitle(), s.getUrl().replaceAll(link2, ""), source + s.getPermalink());
                         clips.add(clip);
 
                     }

@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -45,6 +46,7 @@ public class CardContentFragment extends Fragment {
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public ImageView picture;
         public ImageView favorite;
+        public Button source;
         public TextView name;
         public TextView description;
 
@@ -53,9 +55,11 @@ public class CardContentFragment extends Fragment {
             picture = (ImageView) itemView.findViewById(R.id.card_image);
             description = (TextView) itemView.findViewById(R.id.card_text);
             favorite = (ImageView) itemView.findViewById(R.id.favorite_button);
+            source = (Button) itemView.findViewById(R.id.source_button);
 
             picture.setOnClickListener(this);
             favorite.setOnClickListener(this);
+            source.setOnClickListener(this);
 
         }
 
