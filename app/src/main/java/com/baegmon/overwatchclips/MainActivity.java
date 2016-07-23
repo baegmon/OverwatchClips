@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Clip> clips;
     private ArrayList<Clip> favoriteClips;
+    private Adapter adapter;
     private Resource resource;
 
     @Override
@@ -90,8 +91,6 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Clip> retrievedFavorites = new Gson().fromJson(json, type);
         resource.setFavorites(retrievedFavorites);
     }
-
-    private Adapter adapter;
 
     public void callUpdate(){
         adapter.notifyDataSetChanged();
