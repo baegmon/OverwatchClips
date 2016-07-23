@@ -22,7 +22,7 @@ import android.widget.TextView;
 import com.baegmon.overwatchclips.Clip;
 import com.baegmon.overwatchclips.DetailActivity;
 import com.baegmon.overwatchclips.MainActivity;
-import com.baegmon.overwatchclips.OverwatchResource;
+import com.baegmon.overwatchclips.Resource;
 import com.baegmon.overwatchclips.R;
 import com.squareup.picasso.Picasso;
 
@@ -32,7 +32,7 @@ import java.util.ArrayList;
 public class CardContentFragment extends Fragment {
 
     private static ArrayList<Clip> list;
-    private OverwatchResource resource;
+    private Resource resource;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -82,7 +82,13 @@ public class CardContentFragment extends Fragment {
                     clip.favorite();
 
                     DrawableCompat.setTint(favorite.getDrawable(), ContextCompat.getColor(resource.getContext(), R.color.unfavorite));
-                    resource.getFavorites().remove(clip);
+
+                    for(int i = 0 ; i < resource.getFavorites().size(); ++i){
+                        if(resource.getFavorites().get(i).getCode().equals(clip.getCode())){
+                            resource.getFavorites().remove(i);
+                        }
+
+                    }
 
                 } else {
                     clip.favorite();

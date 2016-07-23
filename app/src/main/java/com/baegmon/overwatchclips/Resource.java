@@ -4,14 +4,14 @@ import android.content.Context;
 
 import java.util.ArrayList;
 
-public class OverwatchResource {
+public class Resource {
 
     private ArrayList<Clip> _clips;
     private ArrayList<Clip> _favorites;
     private Context _context;
 
 
-    public OverwatchResource(Context context, ArrayList<Clip> clips, ArrayList<Clip> favorites){
+    public Resource(Context context, ArrayList<Clip> clips, ArrayList<Clip> favorites){
         _context = context;
         _clips = clips;
         _favorites = favorites;
@@ -28,6 +28,10 @@ public class OverwatchResource {
 
     public ArrayList<Clip> getFavorites(){
         return _favorites;
+    }
+
+    public void setFavorites(ArrayList<Clip> favorites){
+        _favorites = favorites;
     }
 
 

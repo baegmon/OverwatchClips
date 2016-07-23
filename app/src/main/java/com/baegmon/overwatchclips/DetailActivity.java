@@ -7,7 +7,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
@@ -22,7 +21,6 @@ import java.net.URL;
 
 public class DetailActivity extends AppCompatActivity {
 
-    public static final String EXTRA_POSITION = "position";
     public static String TITLE = "";
     private VideoView video;
     private MediaController mediaController;
@@ -47,9 +45,6 @@ public class DetailActivity extends AppCompatActivity {
 
         TextView title = (TextView) findViewById(R.id.clip_title);
         title.setText(clip.getTitle());
-
-        //TextView videoSize = (TextView) findViewById(R.id.video_size);
-
 
     }
 

@@ -1,25 +1,16 @@
 package com.baegmon.overwatchclips;
 
-import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.ImageButton;
 
 import com.baegmon.overwatchclips.Fragment.CardContentFragment;
 import com.baegmon.overwatchclips.Fragment.SavedContentFragment;
@@ -46,9 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Clip> clips;
     private ArrayList<Clip> favoriteClips;
-    private String KEY = "CLIPS";
-    private Context _context;
-    private OverwatchResource resource;
+    private Resource resource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
         clips = new ArrayList<>();
         favoriteClips = new ArrayList<>();
 
-        resource = new OverwatchResource(this, clips, favoriteClips);
+        resource = new Resource(this, clips, favoriteClips);
+        retrieveFavorites();
         visitSubreddit();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -73,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public OverwatchResource getResource(){
+    public Resource getResource(){
         return resource;
     }
 
@@ -81,57 +71,25 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        saveFavorites();
 
-        /*
+    }
+
+    public void saveFavorites(){
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
-        String favoritesJson = new Gson().toJson(favoriteClips);
+        String favoritesJson = new Gson().toJson(resource.getFavorites());
         editor.putString("FAVORITES", favoritesJson);
         editor.commit();
-
-        System.out.println("FAVORITES SAVED");
-        */
-
-
     }
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        /*
+    private void retrieveFavorites(){
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
         String json = preferences.getString("FAVORITES", "");
-        System.out.println(json);
-        if(json != null){
-            Type type = new TypeToken<ArrayList<Clip>>(){}.getType();
-            favoriteClips = new Gson().fromJson(json, type);
-            System.out.println("FAVORITES RESTORED");
-
-        }*/
-
+        Type type = new TypeToken<ArrayList<Clip>>(){}.getType();
+        ArrayList<Clip> retrievedFavorites = new Gson().fromJson(json, type);
+        resource.setFavorites(retrievedFavorites);
     }
-
-
-    /*
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putSerializable("FAVORITE", favoriteClips);
-        super.onSaveInstanceState(savedInstanceState);
-
-    }
-
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        System.out.println("ON RESTORE");
-        super.onRestoreInstanceState(savedInstanceState);
-        System.out.println("ON RESTORE");
-        //favoriteClips = (ArrayList<Clip>) savedInstanceState.getSerializable("FAVORITE");
-        //callUpdate();
-
-    }
-    */
 
     private Adapter adapter;
 
@@ -141,11 +99,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager) {
         adapter = new Adapter(getSupportFragmentManager());
-
         adapter.addFragment(new CardContentFragment(), "Clips");
         adapter.addFragment(new SavedContentFragment(), "Favorite");
         viewPager.setAdapter(adapter);
-
     }
 
     static class Adapter extends FragmentPagerAdapter {
@@ -236,22 +192,21 @@ public class MainActivity extends AppCompatActivity {
                     char s_char = s.getURL().charAt(4);
                     if(Character.toString(s_char).equals("s")){
                         Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link, ""), source + s.getPermalink());
-                        /*
+
                         if(checkFavorite(clip)){
                             clip.favorite();
                         }
-                        */
-                        //clips.add(clip);
+
                         resource.getClips().add(clip);
 
 
                     } else {
                         Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link2, ""), source + s.getPermalink());
-                        /*
+
                         if(checkFavorite(clip)){
                             clip.favorite();
                         }
-                        */
+
                         resource.getClips().add(clip);
                     }
                 }
@@ -266,16 +221,16 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean checkFavorite(Clip clip){
 
-        if(favoriteClips == null){
+        if(resource.getFavorites() == null){
             return false;
         }
 
-        if(favoriteClips.isEmpty()){
+        if(resource.getFavorites().isEmpty()){
             return false;
         }
 
-        for(int i = 0 ; i < favoriteClips.size(); i++){
-            if(clip.getCode().equals(favoriteClips.get(i).getCode())){
+        for(int i = 0 ; i < resource.getFavorites().size(); i++){
+            if(clip.getCode().equals(resource.getFavorites().get(i).getCode())){
                 return true;
             }
         }
