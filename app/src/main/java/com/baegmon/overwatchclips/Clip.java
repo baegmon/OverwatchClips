@@ -5,15 +5,16 @@ import java.io.Serializable;
 public class Clip implements Serializable{
 
     private String _title;
-    private String _code;
+    private String _url;
     private String _source;
-    private String _size;
+    private String _code;
     private Boolean _favorited;
 
-    public Clip(String title, String code, String source){
+    public Clip(String title, String url, String code, String source){
         _title = title;
-        _code = code;
+        _url = url;
         _source = source;
+        _code = code;
         _favorited = false;
     }
 
@@ -21,9 +22,11 @@ public class Clip implements Serializable{
         return _title;
     }
 
-    public String getCode(){
-        return _code;
+    public String getURL(){
+        return _url;
     }
+
+    public String getCode() { return _code; }
 
     public String getSource() { return _source; }
 

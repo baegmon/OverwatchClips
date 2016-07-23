@@ -2,6 +2,7 @@ package com.baegmon.overwatchclips;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -18,8 +19,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
-
+import android.widget.ImageButton;
 
 import com.baegmon.overwatchclips.Fragment.CardContentFragment;
 import com.baegmon.overwatchclips.Fragment.SavedContentFragment;
@@ -28,7 +28,10 @@ import com.github.jreddit.retrieval.Submissions;
 import com.github.jreddit.retrieval.params.SubmissionSort;
 import com.github.jreddit.utils.restclient.PoliteHttpRestClient;
 import com.github.jreddit.utils.restclient.RestClient;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -45,22 +48,20 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Clip> favoriteClips;
     private String KEY = "CLIPS";
     private Context _context;
+    private OverwatchResource resource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         clips = new ArrayList<>();
         favoriteClips = new ArrayList<>();
 
-        if(savedInstanceState != null){
-            favoriteClips = (ArrayList<Clip>) savedInstanceState.getSerializable("FAVORITE");
-        }
-
+        resource = new OverwatchResource(this, clips, favoriteClips);
         visitSubreddit();
 
-        //favoriteClips.add(clips.get(1));
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -70,40 +71,69 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabs = (TabLayout) findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
 
-        _context = this;
+    }
+
+    public OverwatchResource getResource(){
+        return resource;
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        /*
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        String favoritesJson = new Gson().toJson(favoriteClips);
+        editor.putString("FAVORITES", favoritesJson);
+        editor.commit();
+
+        System.out.println("FAVORITES SAVED");
+        */
+
 
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        /*
+        SharedPreferences preferences = getPreferences(MODE_PRIVATE);
+        String json = preferences.getString("FAVORITES", "");
+        System.out.println(json);
+        if(json != null){
+            Type type = new TypeToken<ArrayList<Clip>>(){}.getType();
+            favoriteClips = new Gson().fromJson(json, type);
+            System.out.println("FAVORITES RESTORED");
+
+        }*/
+
+    }
+
+
+    /*
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putSerializable("FAVORITE", favoriteClips);
-        // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
+
     }
+
 
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
+        System.out.println("ON RESTORE");
         super.onRestoreInstanceState(savedInstanceState);
-        favoriteClips = (ArrayList<Clip>) savedInstanceState.getSerializable("FAVORITE");
-        callUpdate();
+        System.out.println("ON RESTORE");
+        //favoriteClips = (ArrayList<Clip>) savedInstanceState.getSerializable("FAVORITE");
+        //callUpdate();
 
     }
-
-    public void updateClips(ArrayList<Clip> toUpdate){
-        clips = toUpdate;
-    }
-
-    public ArrayList<Clip> getClips() {
-        return clips;
-    }
-
-    public void updateFavorites(ArrayList<Clip> toUpdate){
-        favoriteClips = toUpdate;
-    }
+    */
 
     private Adapter adapter;
-    private CardContentFragment fragment;
-    private SavedContentFragment favoriteFragment;
 
     public void callUpdate(){
         adapter.notifyDataSetChanged();
@@ -112,92 +142,11 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager(ViewPager viewPager) {
         adapter = new Adapter(getSupportFragmentManager());
 
-        fragment = new CardContentFragment();
-        Bundle bundle = new Bundle();
-        bundle.putSerializable(KEY, clips);
-        fragment.setArguments(bundle);
-
-        favoriteFragment = new SavedContentFragment();
-        Bundle favoriteBundle = new Bundle();
-        favoriteBundle.putSerializable("FAVORITE", favoriteClips);
-        favoriteFragment.setArguments(favoriteBundle);
-
-        adapter.addFragment(fragment, "Clips");
-        adapter.addFragment(favoriteFragment, "Favorite");
-
-        if(!clips.isEmpty()){
-
-            MyOnItemClickListener onItemClickListener = new MyOnItemClickListener() {
-
-                @Override
-                public void onItemClick(View view, int position) {
-
-                    if (view.findViewById(R.id.favorite_button) == view) {
-                        Clip clip = clips.get(position);
-                        ImageView favoriteButton = (ImageView) view.findViewById(R.id.favorite_button);
-
-                        // if the clip is already favorited
-                        if(clip.isFavorited()){
-                            clip.favorite();
-
-                            DrawableCompat.setTint(favoriteButton.getDrawable(), ContextCompat.getColor(_context, R.color.unfavorite));
-
-                            // Update Clips Fragment
-                            updateClipsFragment();
-                            favoriteClips.remove(clip);
-
-
-                        } else {
-                            // otherwise the clip was not previously a favorite, change it to favorite
-                            clip.favorite();
-
-                            DrawableCompat.setTint(favoriteButton.getDrawable(), ContextCompat.getColor(_context, R.color.favorite));
-
-                            // Update Clips Fragment
-                            updateClipsFragment();
-                            favoriteClips.add(clip);
-
-
-                        }
-
-                        adapter.notifyDataSetChanged();
-
-                    } else if (view.findViewById(R.id.card_image) == view){
-                        openClip(position);
-                    } else if (view.findViewById(R.id.source_button) == view) {
-                        Clip clip = clips.get(position);
-
-                        Uri uri = Uri.parse(clip.getSource());
-                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                        startActivity(intent);
-                    }
-
-
-                }
-            };
-
-            fragment.setOnItemClickListener(onItemClickListener);
-        }
+        adapter.addFragment(new CardContentFragment(), "Clips");
+        adapter.addFragment(new SavedContentFragment(), "Favorite");
         viewPager.setAdapter(adapter);
 
     }
-
-    public void openClip(int position){
-        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-        intent.putExtra("Clip", clips.get(position));
-        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(MainActivity.this);
-        ActivityCompat.startActivity(MainActivity.this, intent, options.toBundle());
-    }
-
-    public void updateClipsFragment(){
-        // Update Clips Fragment
-        Bundle clipArgument = fragment.getArguments();
-        clipArgument.clear();
-        Bundle b = new Bundle();
-        b.putSerializable(KEY, clips);
-        clipArgument.putAll(b);
-    }
-
 
     static class Adapter extends FragmentPagerAdapter {
         private final List<Fragment> mFragmentList = new ArrayList<>();
@@ -281,19 +230,30 @@ public class MainActivity extends AppCompatActivity {
             String link = "https://gfycat.com/";
             String link2 = "http://gfycat.com/";
             String source = "https://www.reddit.com";
+
             for(Submission s : submission){
                 if(s.getDomain().contains("gfycat.com")){
                     char s_char = s.getURL().charAt(4);
                     if(Character.toString(s_char).equals("s")){
-                        Clip clip = new Clip(s.getTitle(), s.getUrl().replaceAll(link, ""), source + s.getPermalink());
-                        clips.add(clip);
+                        Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link, ""), source + s.getPermalink());
+                        /*
+                        if(checkFavorite(clip)){
+                            clip.favorite();
+                        }
+                        */
+                        //clips.add(clip);
+                        resource.getClips().add(clip);
+
 
                     } else {
-                        Clip clip = new Clip(s.getTitle(), s.getUrl().replaceAll(link2, ""), source + s.getPermalink());
-                        clips.add(clip);
-
+                        Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link2, ""), source + s.getPermalink());
+                        /*
+                        if(checkFavorite(clip)){
+                            clip.favorite();
+                        }
+                        */
+                        resource.getClips().add(clip);
                     }
-
                 }
             }
 
@@ -302,6 +262,25 @@ public class MainActivity extends AppCompatActivity {
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean checkFavorite(Clip clip){
+
+        if(favoriteClips == null){
+            return false;
+        }
+
+        if(favoriteClips.isEmpty()){
+            return false;
+        }
+
+        for(int i = 0 ; i < favoriteClips.size(); i++){
+            if(clip.getCode().equals(favoriteClips.get(i).getCode())){
+                return true;
+            }
+        }
+
+        return false;
     }
 
 

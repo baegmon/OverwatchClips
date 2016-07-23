@@ -5,7 +5,9 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.AppBarLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
@@ -31,6 +33,8 @@ public class DetailActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        AppBarLayout appbar = (AppBarLayout) findViewById(R.id.appbar);
 
         video = (VideoView) findViewById(R.id.video);
 
@@ -69,8 +73,6 @@ public class DetailActivity extends AppCompatActivity {
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
 
-                String jsonString = new String();
-
                 StringBuilder sb = new StringBuilder();
                 String line;
                 while ((line = br.readLine()) != null) {
@@ -78,7 +80,7 @@ public class DetailActivity extends AppCompatActivity {
                 }
                 br.close();
 
-                jsonString = sb.toString();
+                String jsonString = sb.toString();
                 return new JSONObject(jsonString);
 
             } catch (Exception e) {

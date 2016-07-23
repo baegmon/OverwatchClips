@@ -19,7 +19,7 @@ import android.widget.TextView;
 import com.baegmon.overwatchclips.Clip;
 import com.baegmon.overwatchclips.DetailActivity;
 import com.baegmon.overwatchclips.MainActivity;
-import com.baegmon.overwatchclips.MyOnItemClickListener;
+import com.baegmon.overwatchclips.OverwatchResource;
 import com.baegmon.overwatchclips.R;
 import com.squareup.picasso.Picasso;
 
@@ -28,7 +28,7 @@ import java.util.ArrayList;
 public class SavedContentFragment extends Fragment {
 
     private static ArrayList<Clip> list;
-    private MyOnItemClickListener _onItemClickListener;
+    private OverwatchResource resource;
 
 
     @Override
@@ -40,7 +40,8 @@ public class SavedContentFragment extends Fragment {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        list = (ArrayList<Clip>) getArguments().getSerializable("FAVORITE");
+        resource = ((MainActivity)getActivity()).getResource();
+        list = resource.getFavorites();
 
         return recyclerView;
     }
@@ -69,7 +70,7 @@ public class SavedContentFragment extends Fragment {
                 Intent intent = new Intent(((MainActivity) getActivity()), DetailActivity.class);
                 intent.putExtra("Clip", list.get(getAdapterPosition()));
                 ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(((MainActivity) getActivity()));
-                ActivityCompat.startActivity(((MainActivity) getActivity()), intent, options.toBundle());
+                ActivityCompat.startActivity(getActivity(), intent, options.toBundle());
 
 
             } else if (v == favorite){
@@ -80,20 +81,15 @@ public class SavedContentFragment extends Fragment {
                     clip.favorite();
                     DrawableCompat.setTint(favorite.getDrawable(), ContextCompat.getColor(getContext(), R.color.unfavorite));
 
-                    ArrayList<Clip> clips = ((MainActivity) getActivity()).getClips();
+                    ArrayList<Clip> clips = resource.getClips();
                     for(int i = 0 ; i < clips.size(); i++){
-                        if(clips.get(i).getTitle().equals(clip.getTitle())){
+                        if(clips.get(i).getCode().equals(clip.getCode())){
                             clips.set(i, clip);
                         }
                     }
 
-                    ((MainActivity)getActivity()).updateClips(clips);
-                    ((MainActivity)getActivity()).updateClipsFragment();
-                    // remove the clip
-                    list.remove(clip);
-                    ((MainActivity)getActivity()).updateFavorites(list);
+                    resource.getFavorites().remove(clip);
                     ((MainActivity)getActivity()).callUpdate();
-
                 }
 
             }
