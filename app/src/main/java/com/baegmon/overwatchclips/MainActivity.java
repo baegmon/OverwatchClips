@@ -1,5 +1,6 @@
 package com.baegmon.overwatchclips;
 
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -7,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -68,12 +70,48 @@ public class MainActivity extends AppCompatActivity {
         return resource;
     }
 
+    private void createDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
+        builder.setTitle("Select Quality");
+        builder.setNegativeButton("CANCEL", null);
+        final String[] choices = { "High",
+                             "Medium",
+                             "Low"   };
+
+        int quality = getQuality();
+        builder.setSingleChoiceItems(choices, quality, null);
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                int selectedPosition = ((AlertDialog)dialog).getListView().getCheckedItemPosition();
+                setQuality(selectedPosition);
+            }
+        });
+
+
+        builder.show();
+
+    }
 
     @Override
     protected void onPause() {
         super.onPause();
         saveFavorites();
 
+    }
+
+    public void setQuality(int setting){
+        SharedPreferences preferences = getSharedPreferences("QualityPreference", MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("QUALITY", setting);
+        editor.commit();
+    }
+
+    public int getQuality(){
+        SharedPreferences preferences = getSharedPreferences("QualityPreference" , MODE_PRIVATE);
+        int setting = preferences.getInt("QUALITY", 0);
+        return setting;
     }
 
     public void saveFavorites(){
@@ -153,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
+            createDialog();
         }
 
         return super.onOptionsItemSelected(item);

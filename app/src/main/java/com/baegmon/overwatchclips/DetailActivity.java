@@ -1,6 +1,7 @@
 package com.baegmon.overwatchclips;
 
 
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -24,7 +25,7 @@ public class DetailActivity extends AppCompatActivity {
     public static String TITLE = "";
     private VideoView video;
     private MediaController mediaController;
-    private static final String TAG_LINK = "mp4Url";
+    private int setting = 0;
 
 
     @Override
@@ -34,8 +35,11 @@ public class DetailActivity extends AppCompatActivity {
 
         AppBarLayout appbar = (AppBarLayout) findViewById(R.id.appbar);
 
-        video = (VideoView) findViewById(R.id.video);
+        SharedPreferences preferences = getSharedPreferences("QualityPreference", MODE_PRIVATE);
+        setting = preferences.getInt("QUALITY", 0);
+        System.out.println("QUALITY: " + setting);
 
+        video = (VideoView) findViewById(R.id.video);
         StringBuffer link = new StringBuffer("");
         Clip clip = (Clip) getIntent().getSerializableExtra("Clip");
         String query = "https://gfycat.com/cajax/get/" + clip.getCode();
@@ -96,7 +100,24 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void startClip(JSONObject jsonObject) throws JSONException {
-        Uri uri = Uri.parse(jsonObject.getString(TAG_LINK));
+
+        // 0 = High 1 = Medium 2 = Low
+        String quality = "";
+
+        switch(setting){
+            case 0:
+                quality = "mp4Url";
+                break;
+            case 1:
+                quality = "mobileUrl";
+                break;
+            case 2:
+                quality = "thumb360Url";
+                break;
+
+        }
+
+        Uri uri = Uri.parse(jsonObject.getString(quality));
 
         video.setVideoURI(uri);
         video.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -109,7 +130,6 @@ public class DetailActivity extends AppCompatActivity {
 
             }
         });
-
 
         video.start();
 
