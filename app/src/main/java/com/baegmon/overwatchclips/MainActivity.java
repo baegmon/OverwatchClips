@@ -16,6 +16,7 @@ import android.view.MenuItem;
 
 import com.baegmon.overwatchclips.Fragment.CardContentFragment;
 import com.baegmon.overwatchclips.Fragment.SavedContentFragment;
+import com.baegmon.overwatchclips.Utility.Resource;
 import com.github.jreddit.entity.Submission;
 import com.github.jreddit.retrieval.Submissions;
 import com.github.jreddit.retrieval.params.SubmissionSort;

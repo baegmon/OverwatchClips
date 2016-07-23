@@ -22,7 +22,6 @@ import java.net.URL;
 
 public class DetailActivity extends AppCompatActivity {
 
-    public static String TITLE = "";
     private VideoView video;
     private MediaController mediaController;
     private int setting = 0;
@@ -40,15 +39,50 @@ public class DetailActivity extends AppCompatActivity {
         System.out.println("QUALITY: " + setting);
 
         video = (VideoView) findViewById(R.id.video);
-        StringBuffer link = new StringBuffer("");
         Clip clip = (Clip) getIntent().getSerializableExtra("Clip");
         String query = "https://gfycat.com/cajax/get/" + clip.getCode();
+
         RetrieveJSONTask task = new RetrieveJSONTask();
         task.execute(query);
-        getSupportActionBar().setTitle(TITLE);
 
         TextView title = (TextView) findViewById(R.id.clip_title);
         title.setText(clip.getTitle());
+
+    }
+
+    private void startClip(JSONObject jsonObject) throws JSONException {
+
+        // 0 = High 1 = Medium 2 = Low
+        String quality = "";
+
+        switch(setting){
+            case 0:
+                quality = "mp4Url";
+                break;
+            case 1:
+                quality = "mobileUrl";
+                break;
+            case 2:
+                quality = "thumb360Url";
+                break;
+
+        }
+
+        Uri uri = Uri.parse(jsonObject.getString(quality));
+
+        video.setVideoURI(uri);
+        video.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                mediaController = new MediaController(DetailActivity.this);
+                mp.setLooping(true);
+                video.setMediaController(mediaController);
+                mediaController.setAnchorView(video);
+
+            }
+        });
+
+        video.start();
 
     }
 
@@ -97,42 +131,6 @@ public class DetailActivity extends AppCompatActivity {
             } catch (Exception e){
             }
         }
-    }
-
-    private void startClip(JSONObject jsonObject) throws JSONException {
-
-        // 0 = High 1 = Medium 2 = Low
-        String quality = "";
-
-        switch(setting){
-            case 0:
-                quality = "mp4Url";
-                break;
-            case 1:
-                quality = "mobileUrl";
-                break;
-            case 2:
-                quality = "thumb360Url";
-                break;
-
-        }
-
-        Uri uri = Uri.parse(jsonObject.getString(quality));
-
-        video.setVideoURI(uri);
-        video.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mediaController = new MediaController(DetailActivity.this);
-                mp.setLooping(true);
-                video.setMediaController(mediaController);
-                mediaController.setAnchorView(video);
-
-            }
-        });
-
-        video.start();
-
     }
 
 

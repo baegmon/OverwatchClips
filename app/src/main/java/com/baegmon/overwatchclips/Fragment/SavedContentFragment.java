@@ -2,6 +2,7 @@ package com.baegmon.overwatchclips.Fragment;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -22,9 +23,12 @@ import android.widget.TextView;
 import com.baegmon.overwatchclips.Clip;
 import com.baegmon.overwatchclips.DetailActivity;
 import com.baegmon.overwatchclips.MainActivity;
-import com.baegmon.overwatchclips.Resource;
+import com.baegmon.overwatchclips.Utility.Resource;
 import com.baegmon.overwatchclips.R;
+import com.baegmon.overwatchclips.Utility.Task;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
 
 import java.util.ArrayList;
 
@@ -45,30 +49,55 @@ public class SavedContentFragment extends Fragment {
 
         resource = ((MainActivity)getActivity()).getResource();
         list = resource.getFavorites();
+        verifyPermission();
 
         return recyclerView;
+    }
+
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+
+
+    public void verifyPermission(){
+        int writePermission = ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int readPermission = ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.READ_EXTERNAL_STORAGE);
+
+        if (writePermission != PackageManager.PERMISSION_GRANTED || readPermission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    getActivity(),
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        }
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         public ImageView picture;
         public ImageButton favorite;
         public ImageButton share;
+        public ImageButton download;
         public Button source;
         public TextView name;
         public TextView description;
 
         public ViewHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.item_card, parent, false));
+            super(inflater.inflate(R.layout.detail_card, parent, false));
             picture = (ImageView) itemView.findViewById(R.id.card_image);
             description = (TextView) itemView.findViewById(R.id.card_text);
             favorite = (ImageButton) itemView.findViewById(R.id.favorite_button);
             share = (ImageButton) itemView.findViewById(R.id.share_button);
+            download = (ImageButton) itemView.findViewById(R.id.download_button);
             source = (Button) itemView.findViewById(R.id.source_button);
 
             picture.setOnClickListener(this);
             favorite.setOnClickListener(this);
             share.setOnClickListener(this);
             source.setOnClickListener(this);
+            download.setOnClickListener(this);
         }
 
         @Override
@@ -101,7 +130,7 @@ public class SavedContentFragment extends Fragment {
                 }
 
             } else if (v == share){
-                Clip clip = resource.getClips().get(getAdapterPosition());
+                Clip clip = resource.getFavorites().get(getAdapterPosition());
                 Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_SEND);
                 intent.setType("text/plain");
@@ -109,14 +138,25 @@ public class SavedContentFragment extends Fragment {
 
                 startActivity(Intent.createChooser(intent, "Share clip"));
             } else if (v == source){
-                Clip clip = resource.getClips().get(getAdapterPosition());
+                Clip clip = resource.getFavorites().get(getAdapterPosition());
                 Uri uri = Uri.parse(clip.getSource());
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 startActivity(intent);
+            } else if (v == download){
+                System.out.println("DOWNLOAD CLICKED");
+                Clip clip = resource.getFavorites().get(getAdapterPosition());
+                Task task = new Task();
+                try {
+                    task.downloadClip(clip, getActivity());
+                } catch (JSONException e){
+                    e.printStackTrace();
+                }
+
             }
 
         }
     }
+
 
     public class ContentAdapter extends RecyclerView.Adapter<ViewHolder> {
         // Set numbers of List in RecyclerView.

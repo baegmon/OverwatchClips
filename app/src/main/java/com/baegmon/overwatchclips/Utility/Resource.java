@@ -1,6 +1,8 @@
-package com.baegmon.overwatchclips;
+package com.baegmon.overwatchclips.Utility;
 
 import android.content.Context;
+
+import com.baegmon.overwatchclips.Clip;
 
 import java.util.ArrayList;
 

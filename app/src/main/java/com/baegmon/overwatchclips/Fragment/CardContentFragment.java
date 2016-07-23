@@ -22,7 +22,7 @@ import android.widget.TextView;
 import com.baegmon.overwatchclips.Clip;
 import com.baegmon.overwatchclips.DetailActivity;
 import com.baegmon.overwatchclips.MainActivity;
-import com.baegmon.overwatchclips.Resource;
+import com.baegmon.overwatchclips.Utility.Resource;
 import com.baegmon.overwatchclips.R;
 import com.squareup.picasso.Picasso;
 
