@@ -125,10 +125,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void retrieveFavorites(){
         SharedPreferences preferences = getPreferences(MODE_PRIVATE);
-        String json = preferences.getString("FAVORITES", "");
-        Type type = new TypeToken<ArrayList<Clip>>(){}.getType();
-        ArrayList<Clip> retrievedFavorites = new Gson().fromJson(json, type);
-        resource.setFavorites(retrievedFavorites);
+        if(preferences.contains("FAVORITES")){
+            String json = preferences.getString("FAVORITES", "");
+            Type type = new TypeToken<ArrayList<Clip>>(){}.getType();
+            ArrayList<Clip> retrievedFavorites = new Gson().fromJson(json, type);
+            resource.setFavorites(retrievedFavorites);
+        }
+
     }
 
     public void callUpdate(){

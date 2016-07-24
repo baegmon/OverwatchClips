@@ -86,10 +86,28 @@ public class Task {
                     System.out.println("DIRECTORY CREATED");
                 }
 
+                SharedPreferences preferences = _activity.getSharedPreferences("QualityPreference", _activity.MODE_PRIVATE);
+                int setting = preferences.getInt("QUALITY", 0);
+
+                String quality = "";
+
+                switch(setting){
+                    case 0:
+                        quality = "high";
+                        break;
+                    case 1:
+                        quality = "medium";
+                        break;
+                    case 2:
+                        quality = "low";
+                        break;
+
+                }
+
                 // Output stream
                 OutputStream output = new FileOutputStream(Environment
                         .getExternalStorageDirectory().toString()
-                        + "/Overwatch/" + code + ".mp4");
+                        + "/Overwatch/" + code + "-" + quality + ".mp4");
 
                 byte data[] = new byte[1024];
 
@@ -181,6 +199,7 @@ public class Task {
             try{
                 if(result.has("gfyItem")){
                     _object = result.getJSONObject("gfyItem");
+
                     SharedPreferences preferences = _activity.getSharedPreferences("QualityPreference", _activity.MODE_PRIVATE);
                     int setting = preferences.getInt("QUALITY", 0);
 
@@ -199,8 +218,6 @@ public class Task {
 
                     }
 
-                    System.out.println("URL: " + _object.getString(quality));
-
                     downloadFile(_object.getString(quality));
 
 
@@ -209,9 +226,6 @@ public class Task {
             }
         }
     }
-
-
-
 
 
 }

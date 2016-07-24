@@ -1,16 +1,15 @@
 package com.baegmon.overwatchclips;
 
-
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.AppBarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
+
+import com.danikula.videocache.HttpProxyCacheServer;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,8 +30,6 @@ public class DetailActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
-
-        AppBarLayout appbar = (AppBarLayout) findViewById(R.id.appbar);
 
         SharedPreferences preferences = getSharedPreferences("QualityPreference", MODE_PRIVATE);
         setting = preferences.getInt("QUALITY", 0);
@@ -68,9 +65,11 @@ public class DetailActivity extends AppCompatActivity {
 
         }
 
-        Uri uri = Uri.parse(jsonObject.getString(quality));
+        String url = jsonObject.getString(quality);
+        HttpProxyCacheServer proxy = new HttpProxyCacheServer(getApplicationContext());
+        String proxyURL = proxy.getProxyUrl(url);
+        video.setVideoPath(proxyURL);
 
-        video.setVideoURI(uri);
         video.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
