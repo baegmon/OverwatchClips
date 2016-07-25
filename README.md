@@ -6,6 +6,3 @@ Features:
 - Select quality of clip
 - Favoriting clips
 - Download clips
-
-
-![Image of App](https://i.imgur.com/ZTQQOTf.png)
