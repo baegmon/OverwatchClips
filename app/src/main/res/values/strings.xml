@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Overwatch Clips</string>
     <string name="action_settings">Settings</string>
+    <string name="action_clip">Clip</string>
+    <string name="action_about">About</string>
+
 </resources>

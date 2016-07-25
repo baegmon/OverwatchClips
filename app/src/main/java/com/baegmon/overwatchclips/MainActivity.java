@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         return resource;
     }
 
-    private void createDialog(){
+    private void createSettingsDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
         builder.setTitle("Select Quality");
         builder.setNegativeButton("CANCEL", null);
@@ -95,11 +95,66 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void createAboutDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
+        builder.setTitle("About");
+        builder.setMessage("This application was built using various tools:" +
+                "\n - jReddit: To parse data from Reddit" +
+                "\n - AndroidVideoCache: To cache videos" +
+                "\n - GSON: To convert Java Objects" +
+                "\n - Picasso: To load thumbnail images"
+                + "\n \n"
+                + "Please email any questions, suggestions or bugs to: baegmon@gmail.com"
+
+        );
+
+        builder.setPositiveButton("OK", null);
+        builder.show();
+    }
+
+    private void createClipDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
+        builder.setTitle("Select Quality");
+        builder.setNegativeButton("CANCEL", null);
+        final String[] choices = { "Hot","Top","Rising"   };
+
+        int subreddit = getClipRetrieval();
+        builder.setSingleChoiceItems(choices, subreddit, null);
+
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                int selectedPosition = ((AlertDialog)dialog).getListView().getCheckedItemPosition();
+                setClipRetrieval(selectedPosition);
+                resource.getClips().clear();
+                visitSubreddit();
+                callUpdate();
+
+            }
+        });
+
+
+        builder.show();
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
         saveFavorites();
 
+    }
+
+    public void setClipRetrieval(int setting){
+        SharedPreferences preferences = getSharedPreferences("RetrievalPreference", MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("SUBREDDIT", setting);
+        editor.commit();
+    }
+
+    public int getClipRetrieval(){
+        SharedPreferences preferences = getSharedPreferences("RetrievalPreference" , MODE_PRIVATE);
+        int setting = preferences.getInt("SUBREDDIT", 0);
+        return setting;
     }
 
     public void setQuality(int setting){
@@ -195,7 +250,11 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            createDialog();
+            createSettingsDialog();
+        } else if (id == R.id.action_clip){
+            createClipDialog();
+        } else if (id == R.id.action_about){
+            createAboutDialog();
         }
 
         return super.onOptionsItemSelected(item);
@@ -210,13 +269,26 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public List<Submission> call() throws Exception {
                 RestClient restClient = new PoliteHttpRestClient();
-                restClient.setUserAgent("OverwatchClips/1.0 by Simon Baeg");
+                restClient.setUserAgent("User-Agent: android:com.baegmon.overwatchclips:v1.0 by /u/baegmon");
 
                 // Handle to Submissions, which offers the basic API submission functionality
                 Submissions subms = new Submissions(restClient);
 
-                // Retrieve submissions of a submission
-                return subms.ofSubreddit("overwatch", SubmissionSort.HOT, -1, 100, null, null, true);
+                int retrieval = getClipRetrieval();
+
+                if(retrieval == 0){
+                    return subms.ofSubreddit("overwatch", SubmissionSort.HOT, -1, 100, null, null, true);
+
+                } else if (retrieval == 1){
+                    return subms.ofSubreddit("overwatch", SubmissionSort.TOP, -1, 100, null, null, true);
+
+                } else if (retrieval == 2){
+                    return subms.ofSubreddit("overwatch", SubmissionSort.RISING, -1, 100, null, null, true);
+
+                } else {
+                    return subms.ofSubreddit("overwatch", SubmissionSort.HOT, -1, 100, null, null, true);
+                }
+
             }
         });
 
