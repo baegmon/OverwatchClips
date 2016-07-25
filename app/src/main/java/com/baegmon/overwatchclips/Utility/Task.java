@@ -1,11 +1,14 @@
 package com.baegmon.overwatchclips.Utility;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.baegmon.overwatchclips.Clip;
 
@@ -47,6 +50,9 @@ public class Task {
         new DownloadFileFromURL().execute(url);
     }
 
+    ProgressDialog dialog;
+    boolean duplicateExists = false;
+
 
     class DownloadFileFromURL extends AsyncTask<String, String, String> {
 
@@ -56,7 +62,18 @@ public class Task {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            //pDialog.show();
+            dialog = new ProgressDialog(_activity);
+            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            dialog.setTitle("Downloading Clip");
+            dialog.setCancelable(true);
+            dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    dialog.dismiss();
+                    Toast.makeText(_activity,"Download canceled", Toast.LENGTH_SHORT).show();
+                }
+            });
+            dialog.show();
         }
 
         /**
@@ -83,7 +100,6 @@ public class Task {
                 // if the Overwatch directory doesn't exist, create it
                 if(!directory.exists()){
                     directory.mkdirs();
-                    System.out.println("DIRECTORY CREATED");
                 }
 
                 SharedPreferences preferences = _activity.getSharedPreferences("QualityPreference", _activity.MODE_PRIVATE);
@@ -104,31 +120,44 @@ public class Task {
 
                 }
 
-                // Output stream
-                OutputStream output = new FileOutputStream(Environment
+                String path = Environment
                         .getExternalStorageDirectory().toString()
-                        + "/Overwatch/" + code + "-" + quality + ".mp4");
+                        + "/Overwatch/" + code + "-" + quality + ".mp4";
 
-                byte data[] = new byte[1024];
+                File file = new File(path);
 
-                long total = 0;
+                // if the file does not exist
+                if(!file.exists()){
+                    OutputStream output = new FileOutputStream(path);
 
-                while ((count = input.read(data)) != -1) {
-                    total += count;
-                    // publishing the progress....
-                    // After this onProgressUpdate will be called
-                    publishProgress("" + (int) ((total * 100) / lenghtOfFile));
+                    // Output stream
 
-                    // writing data to file
-                    output.write(data, 0, count);
+                    byte data[] = new byte[1024];
+
+                    long total = 0;
+
+                    while ((count = input.read(data)) != -1) {
+                        total += count;
+                        // publishing the progress....
+                        // After this onProgressUpdate will be called
+                        publishProgress("" + (int) ((total * 100) / lenghtOfFile));
+
+                        // writing data to file
+                        output.write(data, 0, count);
+                    }
+
+                    // flushing output
+                    output.flush();
+
+                    // closing streams
+                    output.close();
+                    input.close();
+
+                } else {
+                    // otherwise the file exists
+                    duplicateExists = true;
                 }
 
-                // flushing output
-                output.flush();
-
-                // closing streams
-                output.close();
-                input.close();
 
             } catch (Exception e) {
                 Log.e("Error: ", e.getMessage());
@@ -141,8 +170,7 @@ public class Task {
          * Updating progress bar
          * */
         protected void onProgressUpdate(String... progress) {
-            // setting progress percentage
-
+            dialog.setProgress(Integer.parseInt(progress[0]));
         }
 
         /**
@@ -152,7 +180,14 @@ public class Task {
         protected void onPostExecute(String file_url) {
             // dismiss the dialog after the file was downloaded
             //pDialog.dismiss();
-            System.out.println("DOWNLOAD FINISHED");
+            dialog.dismiss();
+            if(duplicateExists){
+                Toast.makeText(_activity,"Clip already downloaded", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(_activity,"Clip downloaded", Toast.LENGTH_SHORT).show();
+            }
+
+
 
         }
 

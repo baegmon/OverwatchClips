@@ -232,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
                 if(s.getDomain().contains("gfycat.com")){
                     char s_char = s.getURL().charAt(4);
                     if(Character.toString(s_char).equals("s")){
-                        Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link, ""), source + s.getPermalink());
+                        Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link, ""), source + s.getPermalink(), s.getAuthor());
 
                         if(checkFavorite(clip)){
                             clip.favorite();
@@ -242,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                     } else {
-                        Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link2, ""), source + s.getPermalink());
+                        Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link2, ""), source + s.getPermalink(), s.getAuthor());
 
                         if(checkFavorite(clip)){
                             clip.favorite();

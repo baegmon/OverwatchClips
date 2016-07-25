@@ -5,6 +5,7 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="card_height">304dp</dimen>
     <dimen name="md_keylines">16dp</dimen>
+    <dimen name="bottom_padding">10dp</dimen>
     <dimen name="tile_padding">8dp</dimen>
     <dimen name="tile_height">160dp</dimen>
     <dimen name="app_bar_height">256dp</dimen>

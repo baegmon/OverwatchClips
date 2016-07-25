@@ -24,7 +24,10 @@ import com.baegmon.overwatchclips.DetailActivity;
 import com.baegmon.overwatchclips.MainActivity;
 import com.baegmon.overwatchclips.Utility.Resource;
 import com.baegmon.overwatchclips.R;
+import com.baegmon.overwatchclips.Utility.Task;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONException;
 
 import java.util.ArrayList;
 
@@ -52,6 +55,7 @@ public class CardContentFragment extends Fragment {
         public ImageView picture;
         public ImageButton favorite;
         public ImageButton share;
+        public ImageButton download;
         public Button source;
         public TextView name;
         public TextView description;
@@ -62,12 +66,15 @@ public class CardContentFragment extends Fragment {
             description = (TextView) itemView.findViewById(R.id.card_text);
             favorite = (ImageButton) itemView.findViewById(R.id.favorite_button);
             share = (ImageButton) itemView.findViewById(R.id.share_button);
+            download = (ImageButton) itemView.findViewById(R.id.download_button);
             source = (Button) itemView.findViewById(R.id.source_button);
+
 
             picture.setOnClickListener(this);
             favorite.setOnClickListener(this);
             source.setOnClickListener(this);
             share.setOnClickListener(this);
+            download.setOnClickListener(this);
 
         }
 
@@ -122,6 +129,14 @@ public class CardContentFragment extends Fragment {
 
                 startActivity(Intent.createChooser(intent, "Share clip"));
 
+            } else if (v == download){
+                Clip clip = resource.getClips().get(getAdapterPosition());
+                Task task = new Task();
+                try {
+                    task.downloadClip(clip, getActivity());
+                } catch (JSONException e){
+                    e.printStackTrace();
+                }
             }
 
         }

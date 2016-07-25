@@ -85,7 +85,7 @@ public class SavedContentFragment extends Fragment {
         public TextView description;
 
         public ViewHolder(LayoutInflater inflater, ViewGroup parent) {
-            super(inflater.inflate(R.layout.detail_card, parent, false));
+            super(inflater.inflate(R.layout.item_card, parent, false));
             picture = (ImageView) itemView.findViewById(R.id.card_image);
             description = (TextView) itemView.findViewById(R.id.card_text);
             favorite = (ImageButton) itemView.findViewById(R.id.favorite_button);
@@ -143,7 +143,6 @@ public class SavedContentFragment extends Fragment {
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 startActivity(intent);
             } else if (v == download){
-                System.out.println("DOWNLOAD CLICKED");
                 Clip clip = resource.getFavorites().get(getAdapterPosition());
                 Task task = new Task();
                 try {

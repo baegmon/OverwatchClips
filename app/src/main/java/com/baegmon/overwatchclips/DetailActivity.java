@@ -1,14 +1,22 @@
 package com.baegmon.overwatchclips;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
 
+import com.baegmon.overwatchclips.Utility.Task;
 import com.danikula.videocache.HttpProxyCacheServer;
 
 import org.json.JSONException;
@@ -24,6 +32,7 @@ public class DetailActivity extends AppCompatActivity {
     private VideoView video;
     private MediaController mediaController;
     private int setting = 0;
+    private Clip clip;
 
 
     @Override
@@ -36,15 +45,62 @@ public class DetailActivity extends AppCompatActivity {
         System.out.println("QUALITY: " + setting);
 
         video = (VideoView) findViewById(R.id.video);
-        Clip clip = (Clip) getIntent().getSerializableExtra("Clip");
+        clip = (Clip) getIntent().getSerializableExtra("Clip");
         String query = "https://gfycat.com/cajax/get/" + clip.getCode();
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
 
         RetrieveJSONTask task = new RetrieveJSONTask();
         task.execute(query);
 
-        TextView title = (TextView) findViewById(R.id.clip_title);
-        title.setText(clip.getTitle());
+        if(getResources().getConfiguration().orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
+            TextView title = (TextView) findViewById(R.id.clip_title);
+            title.setText(clip.getTitle());
 
+            TextView author = (TextView) findViewById(R.id.clip_author);
+            author.setText(clip.getUploader());
+
+            TextView source = (TextView) findViewById(R.id.clip_source);
+            source.setText(clip.getSource());
+
+            FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_download);
+
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Task downloadTask = new Task();
+                    try {
+                        downloadTask.downloadClip(clip, DetailActivity.this);
+                    } catch (JSONException e){
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+        }
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        video.stopPlayback();
+        finish();
+        super.onBackPressed();
+        overridePendingTransition(0, 0);
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                video.stopPlayback();
+                super.onBackPressed();
+                finish();
+                overridePendingTransition(0, 0);
+                break;
+        }
+        return true;
     }
 
     private void startClip(JSONObject jsonObject) throws JSONException {
