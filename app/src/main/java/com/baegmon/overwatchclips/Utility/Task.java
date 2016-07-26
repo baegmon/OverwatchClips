@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
@@ -42,6 +41,7 @@ public class Task {
         _activity = activity;
         RetrieveJSONTask task = new RetrieveJSONTask();
         task.execute(query);
+
 
 
     }

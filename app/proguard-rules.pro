@@ -15,3 +15,15 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-dontwarn com.squareup.okhttp.**
+-dontwarn org.sonatype.**
+-dontwarn org.**
+-dontwarn java.**
+-dontwarn javax.**
+-dontwarn com.jcraft.**
+
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class sun.misc.Unsafe { *; }
+-keep class com.google.gson.examples.android.model.** { *; }

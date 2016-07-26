@@ -1,7 +1,9 @@
 package com.baegmon.overwatchclips;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -17,24 +19,26 @@ import android.view.MenuItem;
 import com.baegmon.overwatchclips.Fragment.CardContentFragment;
 import com.baegmon.overwatchclips.Fragment.SavedContentFragment;
 import com.baegmon.overwatchclips.Utility.Resource;
-import com.github.jreddit.entity.Submission;
-import com.github.jreddit.retrieval.Submissions;
-import com.github.jreddit.retrieval.params.SubmissionSort;
-import com.github.jreddit.utils.restclient.PoliteHttpRestClient;
-import com.github.jreddit.utils.restclient.RestClient;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
+import net.dean.jraw.RedditClient;
+import net.dean.jraw.http.UserAgent;
+import net.dean.jraw.http.oauth.Credentials;
+import net.dean.jraw.http.oauth.OAuthData;
+import net.dean.jraw.http.oauth.OAuthException;
+import net.dean.jraw.models.Listing;
+import net.dean.jraw.models.Submission;
+import net.dean.jraw.paginators.Sorting;
+import net.dean.jraw.paginators.SubredditPaginator;
+import net.dean.jraw.paginators.TimePeriod;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,20 +46,45 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Clip> favoriteClips;
     private Adapter adapter;
     private Resource resource;
+    private AdView adview;
+    private RedditClient redditClient;
+    private ProgressDialog pDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
+
+        createLoadingProgressDialog();
 
         clips = new ArrayList<>();
         favoriteClips = new ArrayList<>();
 
         resource = new Resource(this, clips, favoriteClips);
         retrieveFavorites();
-        visitSubreddit();
 
+
+        adview = (AdView) findViewById(R.id.adView);
+        AdRequest request = new AdRequest.Builder().build();
+        adview.loadAd(request);
+
+
+        // OAUTH2 AUTHORIZATION
+        UserAgent myUserAgent = UserAgent.of("Android", "com.baegmon.overwatchclips", "1.0", "/u/baegmon");
+        redditClient = new RedditClient(myUserAgent);
+        final Credentials credentials = Credentials.userlessApp("RbGH0I3I2hBtjw", UUID.randomUUID());
+        authorize(credentials);
+
+    }
+
+    public void createLoadingProgressDialog(){
+        pDialog = new ProgressDialog(this);
+        pDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        pDialog.setMessage("Loading Clips");
+        pDialog.show();
+    }
+
+    public void createView(){
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -64,7 +93,113 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabs = (TabLayout) findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
+    }
 
+    public void authorize(Credentials credentials) {
+
+        new AsyncTask<Credentials, Void, OAuthData>(){
+            @Override
+            protected OAuthData doInBackground(Credentials... credentials) {
+                try {
+                    return redditClient.getOAuthHelper().easyAuth(credentials[0]);
+                } catch (OAuthException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(OAuthData oAuthData) {
+                redditClient.authenticate(oAuthData);
+                visitSubreddit();
+            }
+        }.execute(credentials);
+    }
+
+    public void visitSubreddit() {
+
+        new AsyncTask<Void, Void, ArrayList<String>>() {
+
+            @Override
+            protected ArrayList<String> doInBackground(Void... params) {
+
+                int settings = getSubredditSettings();
+
+                SubredditPaginator paginator = new SubredditPaginator(redditClient);
+                paginator.setSubreddit("overwatch");
+                paginator.setLimit(50);
+
+                switch(settings){
+                    case 0:
+                        paginator.setSorting(Sorting.HOT);
+                        paginator.setTimePeriod(TimePeriod.DAY);
+
+                        break;
+                    case 1:
+                        paginator.setSorting(Sorting.TOP);
+                        paginator.setTimePeriod(TimePeriod.ALL);
+
+                        break;
+                    case 2:
+                        paginator.setSorting(Sorting.RISING);
+                        paginator.setTimePeriod(TimePeriod.DAY);
+
+                        break;
+                    default:
+                        paginator.setSorting(Sorting.HOT);
+                        paginator.setTimePeriod(TimePeriod.DAY);
+
+                        break;
+                }
+
+
+                Listing<Submission> submissions = paginator.next();
+
+                String link = "https://gfycat.com/";
+                String link2 = "http://gfycat.com/";
+                String source = "https://www.reddit.com";
+
+                for(Submission s : submissions){
+
+                    if(s.getUrl().contains("gfycat.com")){
+                        char s_char = s.getUrl().charAt(4);
+
+                        if(Character.toString(s_char).equals("s")){
+                            Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link, ""), source + s.getPermalink(), s.getAuthor());
+
+                            if(checkFavorite(clip)){
+                                clip.favorite();
+                            }
+
+                            resource.getClips().add(clip);
+
+                        } else {
+                            Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link2, ""), source + s.getPermalink(), s.getAuthor());
+
+                            if(checkFavorite(clip)){
+                                clip.favorite();
+                            }
+
+                            resource.getClips().add(clip);
+                        }
+
+                    }
+
+                }
+
+                pDialog.dismiss();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        createView();
+                    }
+                });
+
+
+                return null;
+            }
+        }.execute();
     }
 
     public Resource getResource(){
@@ -99,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
         builder.setTitle("About");
         builder.setMessage("This application was built using various tools:" +
-                "\n - jReddit: To parse data from Reddit" +
+                "\n - JRAW: To access data from Reddit" +
                 "\n - AndroidVideoCache: To cache videos" +
                 "\n - GSON: To convert Java Objects" +
                 "\n - Picasso: To load thumbnail images"
@@ -112,21 +247,22 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void createClipDialog(){
+    private void createSubredditSettingsDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
-        builder.setTitle("Select Quality");
+        builder.setTitle("Select Sorting");
         builder.setNegativeButton("CANCEL", null);
-        final String[] choices = { "Hot","Top","Rising"   };
+        final String[] choices = { "Hot","Top","Rising" };
 
-        int subreddit = getClipRetrieval();
+        int subreddit = getSubredditSettings();
         builder.setSingleChoiceItems(choices, subreddit, null);
 
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 int selectedPosition = ((AlertDialog)dialog).getListView().getCheckedItemPosition();
-                setClipRetrieval(selectedPosition);
+                setSubredditSettings(selectedPosition);
                 resource.getClips().clear();
+                createLoadingProgressDialog();
                 visitSubreddit();
                 callUpdate();
 
@@ -144,14 +280,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void setClipRetrieval(int setting){
+    public void setSubredditSettings(int setting){
         SharedPreferences preferences = getSharedPreferences("RetrievalPreference", MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("SUBREDDIT", setting);
         editor.commit();
     }
 
-    public int getClipRetrieval(){
+    public int getSubredditSettings(){
         SharedPreferences preferences = getSharedPreferences("RetrievalPreference" , MODE_PRIVATE);
         int setting = preferences.getInt("SUBREDDIT", 0);
         return setting;
@@ -251,85 +387,13 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             createSettingsDialog();
-        } else if (id == R.id.action_clip){
-            createClipDialog();
+        } else if (id == R.id.action_sorting){
+            createSubredditSettingsDialog();
         } else if (id == R.id.action_about){
             createAboutDialog();
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    public void visitSubreddit(){
-        List<Submission> submission;
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        CompletionService<List<Submission>> completionService = new ExecutorCompletionService<>(executorService);
-
-        completionService.submit(new Callable<List<Submission>>() {
-            @Override
-            public List<Submission> call() throws Exception {
-                RestClient restClient = new PoliteHttpRestClient();
-                restClient.setUserAgent("User-Agent: android:com.baegmon.overwatchclips:v1.0 by /u/baegmon");
-
-                // Handle to Submissions, which offers the basic API submission functionality
-                Submissions subms = new Submissions(restClient);
-
-                int retrieval = getClipRetrieval();
-
-                if(retrieval == 0){
-                    return subms.ofSubreddit("overwatch", SubmissionSort.HOT, -1, 100, null, null, true);
-
-                } else if (retrieval == 1){
-                    return subms.ofSubreddit("overwatch", SubmissionSort.TOP, -1, 100, null, null, true);
-
-                } else if (retrieval == 2){
-                    return subms.ofSubreddit("overwatch", SubmissionSort.RISING, -1, 100, null, null, true);
-
-                } else {
-                    return subms.ofSubreddit("overwatch", SubmissionSort.HOT, -1, 100, null, null, true);
-                }
-
-            }
-        });
-
-        try {
-            final Future<List<Submission>> completedFuture = completionService.take();
-            submission = completedFuture.get();
-
-            String link = "https://gfycat.com/";
-            String link2 = "http://gfycat.com/";
-            String source = "https://www.reddit.com";
-
-            for(Submission s : submission){
-                if(s.getDomain().contains("gfycat.com")){
-                    char s_char = s.getURL().charAt(4);
-                    if(Character.toString(s_char).equals("s")){
-                        Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link, ""), source + s.getPermalink(), s.getAuthor());
-
-                        if(checkFavorite(clip)){
-                            clip.favorite();
-                        }
-
-                        resource.getClips().add(clip);
-
-
-                    } else {
-                        Clip clip = new Clip(s.getTitle(), s.getUrl(), s.getUrl().replaceAll(link2, ""), source + s.getPermalink(), s.getAuthor());
-
-                        if(checkFavorite(clip)){
-                            clip.favorite();
-                        }
-
-                        resource.getClips().add(clip);
-                    }
-                }
-            }
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
     }
 
     public boolean checkFavorite(Clip clip){
