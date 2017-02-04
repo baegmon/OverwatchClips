@@ -1,4 +1,4 @@
-package com.baegmon.overwatchclips;
+package com.baegmon.overwatching;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -16,11 +16,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.baegmon.overwatchclips.Fragment.CardContentFragment;
-import com.baegmon.overwatchclips.Fragment.SavedContentFragment;
-import com.baegmon.overwatchclips.Utility.Resource;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
+import com.baegmon.overwatching.Fragment.CardContentFragment;
+import com.baegmon.overwatching.Fragment.SavedContentFragment;
+import com.baegmon.overwatching.Utility.Resource;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -46,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Clip> favoriteClips;
     private Adapter adapter;
     private Resource resource;
-    private AdView adview;
     private RedditClient redditClient;
     private ProgressDialog pDialog;
 
@@ -64,13 +61,8 @@ public class MainActivity extends AppCompatActivity {
         retrieveFavorites();
 
 
-        adview = (AdView) findViewById(R.id.adView);
-        AdRequest request = new AdRequest.Builder().build();
-        adview.loadAd(request);
-
-
         // OAUTH2 AUTHORIZATION
-        UserAgent myUserAgent = UserAgent.of("Android", "com.baegmon.overwatchclips", "1.0", "/u/baegmon");
+        UserAgent myUserAgent = UserAgent.of("Android", "com.baegmon.overwatching", "1.0", "/u/baegmon");
         redditClient = new RedditClient(myUserAgent);
         final Credentials credentials = Credentials.userlessApp("RbGH0I3I2hBtjw", UUID.randomUUID());
         authorize(credentials);
@@ -210,9 +202,7 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
         builder.setTitle("Select Quality");
         builder.setNegativeButton("CANCEL", null);
-        final String[] choices = { "High",
-                             "Medium",
-                             "Low"   };
+        final String[] choices = { "High", "Medium", "Low" };
 
         int quality = getQuality();
         builder.setSingleChoiceItems(choices, quality, null);
@@ -284,26 +274,24 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences preferences = getSharedPreferences("RetrievalPreference", MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("SUBREDDIT", setting);
-        editor.commit();
+        editor.apply();
     }
 
     public int getSubredditSettings(){
         SharedPreferences preferences = getSharedPreferences("RetrievalPreference" , MODE_PRIVATE);
-        int setting = preferences.getInt("SUBREDDIT", 0);
-        return setting;
+        return preferences.getInt("SUBREDDIT", 0);
     }
 
     public void setQuality(int setting){
         SharedPreferences preferences = getSharedPreferences("QualityPreference", MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("QUALITY", setting);
-        editor.commit();
+        editor.apply();
     }
 
     public int getQuality(){
         SharedPreferences preferences = getSharedPreferences("QualityPreference" , MODE_PRIVATE);
-        int setting = preferences.getInt("QUALITY", 0);
-        return setting;
+        return preferences.getInt("QUALITY", 0);
     }
 
     public void saveFavorites(){
@@ -311,7 +299,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = preferences.edit();
         String favoritesJson = new Gson().toJson(resource.getFavorites());
         editor.putString("FAVORITES", favoritesJson);
-        editor.commit();
+        editor.apply();
     }
 
     private void retrieveFavorites(){
@@ -340,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
         private final List<Fragment> mFragmentList = new ArrayList<>();
         private final List<String> mFragmentTitleList = new ArrayList<>();
 
-        public Adapter(FragmentManager manager) {
+        Adapter(FragmentManager manager) {
             super(manager);
         }
 
@@ -359,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
             return POSITION_NONE;
         }
 
-        public void addFragment(Fragment fragment, String title) {
+        void addFragment(Fragment fragment, String title) {
             mFragmentList.add(fragment);
             mFragmentTitleList.add(title);
         }

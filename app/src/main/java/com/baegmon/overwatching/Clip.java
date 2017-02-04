@@ -1,4 +1,4 @@
-package com.baegmon.overwatchclips;
+package com.baegmon.overwatching;
 
 import java.io.Serializable;
 
@@ -11,7 +11,7 @@ public class Clip implements Serializable{
     private String _uploader;
     private Boolean _favorited;
 
-    public Clip(String title, String url, String code, String source, String uploader){
+    Clip(String title, String url, String code, String source, String uploader){
         _title = title;
         _url = url;
         _source = source;

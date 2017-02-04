@@ -1,4 +1,4 @@
-package com.baegmon.overwatchclips.Utility;
+package com.baegmon.overwatching.Utility;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -9,7 +9,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.baegmon.overwatchclips.Clip;
+import com.baegmon.overwatching.Clip;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,18 +18,32 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 public class Task {
 
     private JSONObject _object;
     private String code = "";
+    private String downloadPath = "";
     private Activity _activity;
+    private ProgressDialog dialog;
+
+    private boolean duplicateExists = false;
+    private long totalFileSize = 0;
+    private long downloadedFileSize = 0;
+
+    private static final double SPACE_KB = 1024;
+    private static final double SPACE_MB = 1024 * SPACE_KB;
+    private static final double SPACE_GB = 1024 * SPACE_MB;
+    private static final double SPACE_TB = 1024 * SPACE_GB;
 
     public Task(){
         _object = new JSONObject();
@@ -43,22 +57,14 @@ public class Task {
         task.execute(query);
 
 
-
     }
 
-    public void downloadFile(String url){
+    private void downloadFile(String url){
         new DownloadFileFromURL().execute(url);
     }
 
-    ProgressDialog dialog;
-    boolean duplicateExists = false;
+    private class DownloadFileFromURL extends AsyncTask<String, String, String> {
 
-
-    class DownloadFileFromURL extends AsyncTask<String, String, String> {
-
-        /**
-         * Before starting background thread Show Progress Bar Dialog
-         * */
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -73,12 +79,10 @@ public class Task {
                     Toast.makeText(_activity,"Download canceled", Toast.LENGTH_SHORT).show();
                 }
             });
+            dialog.setProgressNumberFormat(convertBytes(downloadedFileSize) + "/" + convertBytes(totalFileSize));
             dialog.show();
         }
 
-        /**
-         * Downloading file in background thread
-         * */
         @Override
         protected String doInBackground(String... params) {
             int count;
@@ -87,9 +91,7 @@ public class Task {
                 URLConnection connection = url.openConnection();
                 connection.connect();
 
-                // this will be useful so that you can show a tipical 0-100%
-                // progress bar
-                int lenghtOfFile = connection.getContentLength();
+                totalFileSize = connection.getContentLength();
 
                 // download the file
                 InputStream input = new BufferedInputStream(url.openStream(),
@@ -120,15 +122,14 @@ public class Task {
 
                 }
 
-                String path = Environment
-                        .getExternalStorageDirectory().toString()
+                downloadPath = Environment.getExternalStorageDirectory().toString()
                         + "/Overwatch/" + code + "-" + quality + ".mp4";
 
-                File file = new File(path);
+                File file = new File(downloadPath);
 
                 // if the file does not exist
                 if(!file.exists()){
-                    OutputStream output = new FileOutputStream(path);
+                    OutputStream output = new FileOutputStream(downloadPath);
 
                     // Output stream
 
@@ -138,9 +139,12 @@ public class Task {
 
                     while ((count = input.read(data)) != -1) {
                         total += count;
+                        downloadedFileSize = total;
                         // publishing the progress....
                         // After this onProgressUpdate will be called
-                        publishProgress("" + (int) ((total * 100) / lenghtOfFile));
+                        //publishProgress(convertBytes(total));
+                        publishProgress("" + (int) ((total * 100) / totalFileSize));
+                        dialog.setProgressNumberFormat(convertBytes(downloadedFileSize) + "/" + convertBytes(totalFileSize));
 
                         // writing data to file
                         output.write(data, 0, count);
@@ -153,42 +157,34 @@ public class Task {
                     output.close();
                     input.close();
 
+
                 } else {
                     // otherwise the file exists
                     duplicateExists = true;
                 }
 
 
-            } catch (Exception e) {
-                Log.e("Error: ", e.getMessage());
+            } catch (IOException e){
+                e.printStackTrace();
             }
 
             return null;
         }
 
-        /**
-         * Updating progress bar
-         * */
+
         protected void onProgressUpdate(String... progress) {
             dialog.setProgress(Integer.parseInt(progress[0]));
         }
 
-        /**
-         * After completing background task Dismiss the progress dialog
-         * **/
         @Override
         protected void onPostExecute(String file_url) {
             // dismiss the dialog after the file was downloaded
-            //pDialog.dismiss();
-            dialog.dismiss();
             if(duplicateExists){
-                Toast.makeText(_activity,"Clip already downloaded", Toast.LENGTH_SHORT).show();
+                Toast.makeText(_activity,"Clip has already been downloaded", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(_activity,"Clip downloaded", Toast.LENGTH_SHORT).show();
+                Toast.makeText(_activity,"Clip downloaded to " +  downloadPath, Toast.LENGTH_LONG).show();
             }
-
-
-
+            dialog.dismiss();
         }
 
     }
@@ -262,5 +258,25 @@ public class Task {
         }
     }
 
+    private String convertBytes(long bytes){
+        NumberFormat nf = new DecimalFormat();
+        nf.setMaximumFractionDigits(2);
+
+        try {
+            if ( bytes < SPACE_KB ) {
+                return nf.format(bytes) + " Byte(s)";
+            } else if ( bytes < SPACE_MB ) {
+                return nf.format(bytes/SPACE_KB) + " KB";
+            } else if ( bytes < SPACE_GB ) {
+                return nf.format(bytes/SPACE_MB) + " MB";
+            } else if ( bytes < SPACE_TB ) {
+                return nf.format(bytes/SPACE_GB) + " GB";
+            } else {
+                return nf.format(bytes/SPACE_TB) + " TB";
+            }
+        } catch (Exception e) {
+            return bytes + " Byte(s)";
+        }
+    }
 
 }

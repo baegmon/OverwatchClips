@@ -1,4 +1,4 @@
-package com.baegmon.overwatchclips.Fragment;
+package com.baegmon.overwatching.Fragment;
 
 import android.content.Context;
 import android.content.Intent;
@@ -20,12 +20,12 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.baegmon.overwatchclips.Clip;
-import com.baegmon.overwatchclips.DetailActivity;
-import com.baegmon.overwatchclips.MainActivity;
-import com.baegmon.overwatchclips.Utility.Resource;
-import com.baegmon.overwatchclips.R;
-import com.baegmon.overwatchclips.Utility.Task;
+import com.baegmon.overwatching.Clip;
+import com.baegmon.overwatching.DetailActivity;
+import com.baegmon.overwatching.MainActivity;
+import com.baegmon.overwatching.Utility.Resource;
+import com.baegmon.overwatching.R;
+import com.baegmon.overwatching.Utility.Task;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONException;
@@ -36,6 +36,7 @@ public class SavedContentFragment extends Fragment {
 
     private static ArrayList<Clip> list;
     private Resource resource;
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
 
 
     @Override
@@ -54,7 +55,6 @@ public class SavedContentFragment extends Fragment {
         return recyclerView;
     }
 
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             android.Manifest.permission.READ_EXTERNAL_STORAGE,
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -76,15 +76,15 @@ public class SavedContentFragment extends Fragment {
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        public ImageView picture;
-        public ImageButton favorite;
-        public ImageButton share;
-        public ImageButton download;
-        public Button source;
-        public TextView name;
-        public TextView description;
+        private ImageView picture;
+        private ImageButton favorite;
+        private ImageButton share;
+        private ImageButton download;
+        private Button source;
+        private TextView name;
+        private TextView description;
 
-        public ViewHolder(LayoutInflater inflater, ViewGroup parent) {
+        private ViewHolder(LayoutInflater inflater, ViewGroup parent) {
             super(inflater.inflate(R.layout.item_card, parent, false));
             picture = (ImageView) itemView.findViewById(R.id.card_image);
             description = (TextView) itemView.findViewById(R.id.card_text);

@@ -1,4 +1,4 @@
-package com.baegmon.overwatchclips;
+package com.baegmon.overwatching;
 
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -13,7 +13,7 @@ import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
 
-import com.baegmon.overwatchclips.Utility.Task;
+import com.baegmon.overwatching.Utility.Task;
 import com.danikula.videocache.HttpProxyCacheServer;
 
 import org.json.JSONException;
